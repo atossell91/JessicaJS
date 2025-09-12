@@ -1,10 +1,5 @@
 from html.parser import HTMLParser
-
-class HtmlElement:
-    def __init__(self, name):
-        self.name: str = name
-        self.children: list[HtmlElement] = []
-        self.data = None
+from HtmlElement import HtmlElement
 
 class JessicaParser(HTMLParser):
     def __init__(self, *, convert_charrefs = True):

@@ -18,6 +18,6 @@ def create_component( name: str, location: str ) -> None:
     os.mkdir(target_dir)
 
     create_file(name, target_dir, html_path, "html")
-    create_file(name, target_dir, js_path, "js")
+    create_file(name, target_dir, js_path, "js", {"name": name})
     create_file(name, target_dir, css_path, "css")
-    create_file("component", target_dir, json_path, "json")
+    create_file("component", target_dir, json_path, "json", {"name": name, "tag": name})
