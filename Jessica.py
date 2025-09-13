@@ -8,6 +8,7 @@ import os
 import json
 from ComponentInfo import componentInfo
 from HtmlElement import HtmlElement
+from typing import Iterator
 
 def contains_file(directory, filename):
     return os.path.isfile(os.path.join(directory, filename))
@@ -57,10 +58,22 @@ def run_jessica():
     parser.feed(html)
     bfs(parser.elements[0])
 
+def traverse_html(node: HtmlElement) -> Iterator[HtmlElement]:
+    for child in node.children:
+        yield traverse_html(child)
+
 def handle_html(elem: HtmlElement,
-                found_components: dict[str, componentInfo],
-                cached_components: dict[str, HtmlElement]):
-    if elem.name not in cached_components and elem.name in found_components:
+                unloaded_components: dict[str, HtmlElement],
+                loaded_components: dict[str, HtmlElement]):
+    for node in traverse_html(elem):
+        if node.name in loaded_components:
+            node = loaded_components[node.name].clone()
+        elif node.name in unloaded_components:
+            node = handle_html(node)
+    
+    
+
+
         
 
 
