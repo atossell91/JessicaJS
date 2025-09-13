@@ -29,13 +29,14 @@ def CreateComponentInfo(dir_path: str) -> componentInfo:
     return info
     
 
-def get_components(path: str) -> set[componentInfo]:
-    component_dirs = []
+def get_components(path: str) -> dict[str, componentInfo]:
+    component_dirs = {}
     contents = os.listdir(path)
     for item in contents:
         if os.path.isdir(item) and contains_file(item, "component.json"):
             comp = CreateComponentInfo(item)
-            component_dirs.append(comp)
+            if comp.ComponentName not in component_dirs:
+                component_dirs[comp.ComponentName] = comp
     return component_dirs
 
 def process_node(node: HtmlElement, components: set[componentInfo]) -> None:
@@ -47,16 +48,24 @@ def bfs(node):
         print(child.name)
         bfs(child)
 
-def main():
+def run_jessica():
     comps = get_components(".")
-    for comp in comps:
-        print(comp.ComponentName)
 
     parser = JessicaParser.JessicaParser()
 
     html = FileHelpers.load_file("./templates/index.html")
     parser.feed(html)
     bfs(parser.elements[0])
+
+def handle_html(elem: HtmlElement,
+                found_components: dict[str, componentInfo],
+                cached_components: dict[str, HtmlElement]):
+    if elem.name not in cached_components and elem.name in found_components:
+        
+
+
+def main():
+    run_jessica()
 
 if __name__ == '__main__':
     #main()
