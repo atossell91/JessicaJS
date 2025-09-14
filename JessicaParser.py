@@ -8,6 +8,14 @@ class JessicaParser(HTMLParser):
         self.elements: list[HtmlElement] = []
         self.elements.append(HtmlElement("root"))
 
+    def parse(self, html_str: str):
+        self.feed(html_str)
+    
+    def flush(self):
+        root: HtmlElement = self.elements[0]
+        self.elements = []
+        return root
+
     def handle_starttag(self, tag, attrs):
         lastElem = self.elements[-1]
         elem = HtmlElement(tag)

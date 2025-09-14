@@ -49,33 +49,37 @@ def bfs(node):
         print(child.name)
         bfs(child)
 
+def bbw(current_element: HtmlElement,
+        unloaded_components: dict[str, HtmlElement],
+        loaded_components: dict[str, HtmlElement]):
+    
+    if current_element.name in unloaded_components:
+        if current_element.name not in loaded_components:
+            comp = bbw(unloaded_components[current_element.name], unloaded_components, loaded_components)
+            loaded_components[current_element.name] = comp
+
+        target_element = loaded_components[current_element.name].clone()
+    else:
+        target_element: HtmlElement = HtmlElement(current_element.name)
+    
+    target_element.data = current_element.data
+
+    for child in current_element.children:
+        target_element.children.append(bbw(child, unloaded_components, loaded_components))
+    return target_element
+
+def parse_html(html_content: str):
+    pass
+
 def run_jessica():
     comps = get_components(".")
 
     parser = JessicaParser.JessicaParser()
 
     html = FileHelpers.load_file("./templates/index.html")
-    parser.feed(html)
-    bfs(parser.elements[0])
-
-def traverse_html(node: HtmlElement) -> Iterator[HtmlElement]:
-    for child in node.children:
-        yield traverse_html(child)
-
-def handle_html(elem: HtmlElement,
-                unloaded_components: dict[str, HtmlElement],
-                loaded_components: dict[str, HtmlElement]):
-    for node in traverse_html(elem):
-        if node.name in loaded_components:
-            node = loaded_components[node.name].clone()
-        elif node.name in unloaded_components:
-            node = handle_html(node)
-    
-    
-
-
-        
-
+    parser.parse(html)
+    tree: HtmlElement = parser.flush()
+    bfs(tree)
 
 def main():
     run_jessica()
