@@ -1,8 +1,7 @@
 import ProjectCreator
 import ComponentCreator
 import FileHelpers
-import JessicaParser
-import html.parser
+from JessicaParser import parse_html
 import re
 import os
 import json
@@ -28,7 +27,6 @@ def CreateComponentInfo(dir_path: str) -> componentInfo:
 
     info = componentInfo(name, dir_path)
     return info
-    
 
 def get_components(path: str) -> dict[str, componentInfo]:
     component_dirs = {}
@@ -52,7 +50,7 @@ def bfs(node):
 def bbw(current_element: HtmlElement,
         unloaded_components: dict[str, HtmlElement],
         loaded_components: dict[str, HtmlElement]):
-    
+    print(f'Jessica: {current_element.name}')
     if current_element.name in unloaded_components:
         if current_element.name not in loaded_components:
             comp = bbw(unloaded_components[current_element.name], unloaded_components, loaded_components)
@@ -68,22 +66,30 @@ def bbw(current_element: HtmlElement,
         target_element.children.append(bbw(child, unloaded_components, loaded_components))
     return target_element
 
-def parse_html(html_content: str):
-    pass
+def load_component_html(component_info: dict[str, componentInfo]):
+    components: dict[str, HtmlElement] = {}
+    for ci in component_info:
+        cp = component_info[ci]
+        if cp.ComponentName not in components:
+            loaded_html: str = FileHelpers.load_file(os.path.join(cp.DirPath, f'{cp.ComponentName}.html'))
+            components[cp.ComponentName] = parse_html(loaded_html)
+    return components
 
 def run_jessica():
     comps = get_components(".")
-
-    parser = JessicaParser.JessicaParser()
+    unloaded_components: dict[HtmlElement] = load_component_html(comps)
+    loaded_components: dict[HtmlElement] = {}
 
     html = FileHelpers.load_file("./templates/index.html")
-    parser.parse(html)
-    tree: HtmlElement = parser.flush()
-    bfs(tree)
+    tree: HtmlElement = parse_html(html)
+
+    rar = bbw(tree, unloaded_components, loaded_components)
+    print(loaded_components)
+    bfs(rar)
 
 def main():
     run_jessica()
 
 if __name__ == '__main__':
-    #main()
-    ComponentCreator.create_component("Jess", ".")
+    #ComponentCreator.create_component("Jess", ".")
+    main()
