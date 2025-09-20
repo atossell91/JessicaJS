@@ -47,24 +47,49 @@ def bfs(node):
         print(child.name)
         bfs(child)
 
-def bbw(current_element: HtmlElement,
+
+
+## Complex Code
+ ##
+   ##
+
+def properly_load_comps(current_element: HtmlElement,
         unloaded_components: dict[str, HtmlElement],
         loaded_components: dict[str, HtmlElement]):
-    print(f'Jessica: {current_element.name}')
+    
+    # Properly load any unloaded componenents (recursive)
     if current_element.name in unloaded_components:
         if current_element.name not in loaded_components:
-            comp = bbw(unloaded_components[current_element.name], unloaded_components, loaded_components)
+            comp = stitch_components(unloaded_components[current_element.name], unloaded_components, loaded_components)
             loaded_components[current_element.name] = comp
 
         target_element = loaded_components[current_element.name].clone()
     else:
         target_element: HtmlElement = HtmlElement(current_element.name)
     
+    return target_element
+    
+def append_all_chilren(from_elem: HtmlElement, to_elem: HtmlElement):
+    for child in from_elem.children:
+        to_elem.children.append(child)
+
+
+def stitch_components(current_element: HtmlElement,
+        unloaded_components: dict[str, HtmlElement],
+        loaded_components: dict[str, HtmlElement]):
+    
+    target_element = properly_load_comps(current_element, unloaded_components, loaded_components)
     target_element.data = current_element.data
 
     for child in current_element.children:
-        target_element.children.append(bbw(child, unloaded_components, loaded_components))
+        complete_elem = stitch_components(child, unloaded_components, loaded_components)
+        append_all_chilren(complete_elem, target_element)
+        
     return target_element
+
+   ##
+ ##
+##
 
 def load_component_html(component_info: dict[str, componentInfo]):
     components: dict[str, HtmlElement] = {}
@@ -83,9 +108,8 @@ def run_jessica():
     html = FileHelpers.load_file("./templates/index.html")
     tree: HtmlElement = parse_html(html)
 
-    rar = bbw(tree, unloaded_components, loaded_components)
-    print(loaded_components)
-    bfs(rar)
+    rar = stitch_components(tree, unloaded_components, loaded_components)
+    #print(loaded_components)
 
 def main():
     run_jessica()
