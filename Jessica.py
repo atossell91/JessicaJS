@@ -47,49 +47,51 @@ def bfs(node):
         print(child.name)
         bfs(child)
 
-
-
-## Complex Code
- ##
-   ##
-
-def properly_load_comps(current_element: HtmlElement,
+def affirm(current_element: HtmlElement,
         unloaded_components: dict[str, HtmlElement],
         loaded_components: dict[str, HtmlElement]):
     
-    # Properly load any unloaded componenents (recursive)
     if current_element.name in unloaded_components:
-        if current_element.name not in loaded_components:
-            comp = stitch_components(unloaded_components[current_element.name], unloaded_components, loaded_components)
-            loaded_components[current_element.name] = comp
-
-        target_element = loaded_components[current_element.name].clone()
+        new_node = affirm(unloaded_components[current_element.name], unloaded_components, loaded_components)
     else:
-        target_element: HtmlElement = HtmlElement(current_element.name)
+        new_node: HtmlElement = HtmlElement(current_element.name)
+        new_node.data = current_element.data
+        new_node.attributes = current_element.attributes
     
-    return target_element
-    
-def append_all_chilren(from_elem: HtmlElement, to_elem: HtmlElement):
-    for child in from_elem.children:
-        to_elem.children.append(child)
-
-
-def stitch_components(current_element: HtmlElement,
-        unloaded_components: dict[str, HtmlElement],
-        loaded_components: dict[str, HtmlElement]):
-    
-    target_element = properly_load_comps(current_element, unloaded_components, loaded_components)
-    target_element.data = current_element.data
-
     for child in current_element.children:
-        complete_elem = stitch_components(child, unloaded_components, loaded_components)
-        append_all_chilren(complete_elem, target_element)
-        
-    return target_element
+        temp_node = affirm(child, unloaded_components, loaded_components)
+        if temp_node.name == 'root':
+            for temp_child in temp_node.children:
+                new_node.children.append(temp_child)
+        else:
+            new_node.children.append(affirm(child, unloaded_components, loaded_components))
 
-   ##
- ##
-##
+    return new_node
+
+## Writing the HTML
+def repeat_str(seq, repeats):
+    output = ""
+    for i in range(repeats):
+        output = output + seq
+    return output
+
+def dfs(tree, indent=0):
+    spaces = repeat_str(" ", indent)
+    output: str = ""
+    output = output + "\n" + spaces + "<" + tree.name + ">"
+
+    print(tree.data)
+    if tree.data is not None:
+        output = output + "\n" + spaces + tree.data
+
+    for child in tree.children:
+        output = output + dfs(child, indent + 4)
+    output = output + "\n" + spaces + "</" + tree.name + ">"
+    return output
+
+def write(tree):
+    for child in tree.children:
+        write(child)
 
 def load_component_html(component_info: dict[str, componentInfo]):
     components: dict[str, HtmlElement] = {}
@@ -108,7 +110,9 @@ def run_jessica():
     html = FileHelpers.load_file("./templates/index.html")
     tree: HtmlElement = parse_html(html)
 
-    rar = stitch_components(tree, unloaded_components, loaded_components)
+    #rar = stitch_components(tree, unloaded_components, loaded_components)
+    rar = affirm(tree, unloaded_components, loaded_components)
+    print(dfs(rar))
     #print(loaded_components)
 
 def main():

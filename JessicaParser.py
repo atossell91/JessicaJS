@@ -23,12 +23,24 @@ class JessicaParser(HTMLParser):
         elem = HtmlElement(tag)
         lastElem.children.append(elem)
         self.elements.append(elem)
+        lastElem.attributes = attrs
+
+        if tag == "meta":
+            self.elements.pop()
     
     def handle_endtag(self, tag):
         self.elements.pop()
+
+#    def handle_startendtag(self, tag, attrs):
+#        pass
     
     def handle_data(self, data):
-        pass
+        lelem: HtmlElement = self.elements[-1]
+        if lelem.data is None:
+            lelem.data = data.strip("\n").strip(" ")
+        else:
+            lelem.data += data.strip("\n").strip(" ")
+
 
 def parse_html(html_str: str) -> HtmlElement:
     parser: JessicaParser = JessicaParser()
