@@ -1,129 +1,58 @@
-import ProjectCreator
-import ComponentCreator
-import FileHelpers
-from JessicaParser import parse_html
-import re
-import os
-import json
-from ComponentInfo import componentInfo
-from HtmlElement import HtmlElement
-from typing import Iterator
-import argparse
+from argparse import ArgumentParser
 
-def contains_file(directory, filename):
-    return os.path.isfile(os.path.join(directory, filename))
+from ProjectCreator import create_project
+from ComponentCreator import create_component
+from ProjectBuilder import build_project
 
-def replace(content, tag_name, body):
-    full_tag = f'<{tag_name}/>'
+# JessicaJS AddComponent --name CompName [--output OutputDir]
+# JessicaJS NewProject --name ProjName
 
-def CreateComponentInfo(dir_path: str) -> componentInfo:
-    name: str = dir_path
-    manifest_path: str = os.path.join(dir_path, "component.json")
+def AddComponent(args):
+    create_component(args.name, ".")
 
-    with open(manifest_path, 'rb') as f:
-        obj: dict[str, str] = json.load(f)
+def AddProject(args):
+    create_project(args.name)
 
-    if "name" in obj:
-        name = obj["name"]
+def StitchProject(args):
+    build_project("index.html", ".", "out")
 
-    info = componentInfo(name, dir_path)
-    return info
+def init_parser():
+    parser = ArgumentParser("JessicaJS")
+    subparsers = parser.add_subparsers()
 
-def get_components(path: str) -> dict[str, componentInfo]:
-    component_dirs = {}
-    contents = os.listdir(path)
-    for item in contents:
-        if os.path.isdir(item) and contains_file(item, "component.json"):
-            comp = CreateComponentInfo(item)
-            if comp.ComponentName not in component_dirs:
-                component_dirs[comp.ComponentName] = comp
-    return component_dirs
+    stitch = subparsers.add_parser("Stitch")
+    stitch.set_defaults(func=StitchProject)
 
-def process_node(node: HtmlElement, components: set[componentInfo]) -> None:
-    if node.name in components:
-        pass
+    addComp = subparsers.add_parser("AddComponent")
+    addComp.set_defaults(func=AddComponent)
+    addComp.add_argument(
+        "name",
+        help="The component name"
+    )
+    addComp.add_argument(
+        "--output",
+        help="The component output directory"
+    )
 
-def bfs(node):
-    for child in node.children:
-        print(child.name)
-        bfs(child)
+    addProj = subparsers.add_parser("NewProject")
+    addProj.set_defaults(func=AddProject)
+    addProj.set_defaults()
+    addProj.add_argument(
+        "name",
+        help="The Project name"
+    )
+    addProj.add_argument(
+        "--output",
+        help="The project output directory"
+    )
 
-def affirm(current_element: HtmlElement,
-        unloaded_components: dict[str, HtmlElement],
-        loaded_components: dict[str, HtmlElement]):
-    
-    if current_element.name in unloaded_components:
-        new_node = affirm(unloaded_components[current_element.name], unloaded_components, loaded_components)
-    else:
-        new_node: HtmlElement = HtmlElement(current_element.name)
-        new_node.data = current_element.data
-        new_node.attributes = current_element.attributes
-    
-    for child in current_element.children:
-        temp_node = affirm(child, unloaded_components, loaded_components)
-        if temp_node.name == 'root':
-            for temp_child in temp_node.children:
-                new_node.children.append(temp_child)
-        else:
-            new_node.children.append(affirm(child, unloaded_components, loaded_components))
-
-    return new_node
-
-## Writing the HTML
-def repeat_str(seq, repeats):
-    output = ""
-    for i in range(repeats):
-        output = output + seq
-    return output
-
-def print_attrs(attrs: list[tuple]):
-    output = ""
-    if attrs is None:
-        return output
-
-    for tuple in attrs:
-        output = output + f' {tuple[0]}="{tuple[1]}"'
-    return output
-
-def write_html(tree, indent=0):
-    spaces = repeat_str(" ", indent)
-    output: str = ""
-    output = output + "\n" + spaces + "<" + tree.name + print_attrs(tree.attributes) + ">"
-
-    print(tree.data)
-    if tree.data is not None:
-        output = output + "\n    " + spaces + tree.data
-
-    for child in tree.children:
-        output = output + write_html(child, indent + 4)
-    output = output + "\n" + spaces + "</" + tree.name + ">"
-    return output
-
-def load_component_html(component_info: dict[str, componentInfo]):
-    components: dict[str, HtmlElement] = {}
-    for ci in component_info:
-        cp = component_info[ci]
-        if cp.ComponentName not in components:
-            loaded_html: str = FileHelpers.load_file(os.path.join(cp.DirPath, f'{cp.ComponentName}.html'))
-            components[cp.ComponentName] = parse_html(loaded_html)
-    return components
-
-def run_jessica():
-    comps = get_components(".")
-    unloaded_components: dict[HtmlElement] = load_component_html(comps)
-    loaded_components: dict[HtmlElement] = {}
-
-    html = FileHelpers.load_file("./templates/index.html")
-    tree: HtmlElement = parse_html(html)
-
-    #rar = stitch_components(tree, unloaded_components, loaded_components)
-    rar = affirm(tree, unloaded_components, loaded_components)
-    print(write_html(rar))
-    #print(loaded_components)
+    return parser
 
 def main():
-    run_jessica()
+    #parser.add_argument("Action", help="The type of action to run", choices=["AddComponent", "NewProject"])
+    parser = init_parser()
+    args = parser.parse_args()
+    args.func(args)
 
 if __name__ == '__main__':
-    #ComponentCreator.create_component("Jess", ".")
     main()

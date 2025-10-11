@@ -10,4 +10,4 @@ index_file = os.path.join(template_dir, "index.html")
 
 def create_project(name: str) -> None:
     # Create the index file
-    create_file(name, ".", index_file, "html")
+    create_file("index", ".", index_file, "html")
