@@ -23,6 +23,7 @@ class JessicaParser(HTMLParser):
         elem = HtmlElement(tag)
         lastElem.children.append(elem)
         self.elements.append(elem)
+
         lastElem.attributes = attrs
 
         if tag == "meta":

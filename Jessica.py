@@ -8,6 +8,7 @@ import json
 from ComponentInfo import componentInfo
 from HtmlElement import HtmlElement
 from typing import Iterator
+import argparse
 
 def contains_file(directory, filename):
     return os.path.isfile(os.path.join(directory, filename))
@@ -75,23 +76,28 @@ def repeat_str(seq, repeats):
         output = output + seq
     return output
 
-def dfs(tree, indent=0):
+def print_attrs(attrs: list[tuple]):
+    output = ""
+    if attrs is None:
+        return output
+
+    for tuple in attrs:
+        output = output + f' {tuple[0]}="{tuple[1]}"'
+    return output
+
+def write_html(tree, indent=0):
     spaces = repeat_str(" ", indent)
     output: str = ""
-    output = output + "\n" + spaces + "<" + tree.name + ">"
+    output = output + "\n" + spaces + "<" + tree.name + print_attrs(tree.attributes) + ">"
 
     print(tree.data)
     if tree.data is not None:
-        output = output + "\n" + spaces + tree.data
+        output = output + "\n    " + spaces + tree.data
 
     for child in tree.children:
-        output = output + dfs(child, indent + 4)
+        output = output + write_html(child, indent + 4)
     output = output + "\n" + spaces + "</" + tree.name + ">"
     return output
-
-def write(tree):
-    for child in tree.children:
-        write(child)
 
 def load_component_html(component_info: dict[str, componentInfo]):
     components: dict[str, HtmlElement] = {}
@@ -112,7 +118,7 @@ def run_jessica():
 
     #rar = stitch_components(tree, unloaded_components, loaded_components)
     rar = affirm(tree, unloaded_components, loaded_components)
-    print(dfs(rar))
+    print(write_html(rar))
     #print(loaded_components)
 
 def main():
