@@ -4,9 +4,6 @@ from ProjectCreator import create_project
 from ComponentCreator import create_component
 from ProjectBuilder import build_project
 
-# JessicaJS AddComponent --name CompName [--output OutputDir]
-# JessicaJS NewProject --name ProjName
-
 def AddComponent(args):
     create_component(args.name, ".")
 
