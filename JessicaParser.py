@@ -21,10 +21,9 @@ class JessicaParser(HTMLParser):
     def handle_starttag(self, tag, attrs):
         lastElem = self.elements[-1]
         elem = HtmlElement(tag)
+        elem.attributes = attrs
         lastElem.children.append(elem)
         self.elements.append(elem)
-
-        lastElem.attributes = attrs
 
         if tag == "meta":
             self.elements.pop()

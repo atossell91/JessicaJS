@@ -7,31 +7,9 @@ from ComponentInfo import componentInfo
 from HtmlElement import HtmlElement
 from JessicaParser import parse_html
 
-def contains_file(directory, filename):
-    return os.path.isfile(os.path.join(directory, filename))
-
-def CreateComponentInfo(dir_path: str) -> componentInfo:
-    name: str = dir_path
-    manifest_path: str = os.path.join(dir_path, "component.json")
-
-    with open(manifest_path, 'rb') as f:
-        obj: dict[str, str] = json.load(f)
-
-    if "name" in obj:
-        name = obj["name"]
-
-    info = componentInfo(name, dir_path)
-    return info
-
-def get_components(path: str) -> dict[str, componentInfo]:
-    component_dirs = {}
-    contents = os.listdir(path)
-    for item in contents:
-        if os.path.isdir(item) and contains_file(item, "component.json"):
-            comp = CreateComponentInfo(item)
-            if comp.ComponentName not in component_dirs:
-                component_dirs[comp.ComponentName] = comp
-    return component_dirs
+from JComponent import Component
+from JComponent import is_component
+from JComponent import load_component
 
 def affirm(current_element: HtmlElement,
         unloaded_components: dict[str, HtmlElement],
@@ -54,19 +32,28 @@ def affirm(current_element: HtmlElement,
 
     return new_node
 
-def load_component_html(component_info: dict[str, componentInfo]):
+def load_component_html(component_dict: dict[str, Component]):
     components: dict[str, HtmlElement] = {}
-    for ci in component_info:
-        cp = component_info[ci]
-        if cp.ComponentName not in components:
-            loaded_html: str = FileHelpers.load_file(os.path.join(cp.DirPath, f'{cp.ComponentName}.html'))
-            components[cp.ComponentName] = parse_html(loaded_html)
+    for key in component_dict:
+        comp = component_dict[key]
+        if comp.ComponentName not in components:
+            loaded_html: str = comp.GetHtmlText()
+            components[comp.HtmlTag] = parse_html(loaded_html)
     return components
 
+def find_components(directory) -> dict[str, Component]:
+    items = os.listdir(directory)
+    comps: dict[str, Component] = {}
+    for item in items:
+        if os.path.isdir(item) and is_component(item):
+            comp = load_component(item)
+            comps[comp.ComponentName] = comp
+    return comps
+
 def stitch_project(index_filepath, components_dir):
-    comps = get_components(components_dir)
-    unloaded_components: dict[HtmlElement] = load_component_html(comps)
-    loaded_components: dict[HtmlElement] = {}
+    comps = find_components(components_dir)
+    unloaded_components: dict[str, HtmlElement] = load_component_html(comps)
+    loaded_components: dict[str, HtmlElement] = {}
 
     html = FileHelpers.load_file(index_filepath)
     tree: HtmlElement = parse_html(html)
