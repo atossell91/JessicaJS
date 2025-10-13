@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import json
 
 from FileHelpers import load_file
+from Utils import expand_path
 
 @dataclass
 class Component:
@@ -33,30 +34,33 @@ def is_component(directory):
     return  "component.json" in os.listdir(directory)
     
 def load_component(component_dirpath):
-    dir_name = os.path.split(component_dirpath)[1]
+    root_path = expand_path(component_dirpath)
 
-    manifest_path = os.path.join(component_dirpath, "component.json")
+    manifest_path = os.path.join(root_path, "component.json")
     manifest_data = None
     with open(manifest_path, 'r') as manifest:
         manifest_data = json.load(manifest)
+    
+    dir_name = os.path.split(root_path)[1]
+    comp_name = manifest_data["name"]
 
-    tag = dir_name
+    tag = comp_name
     if "tag" in manifest_data:
         tag = manifest_data["tag"]
     tag = tag.lower()
 
-    js_path = os.path.join(component_dirpath, f'{dir_name}.js')
+    js_path = os.path.join(root_path, f'{comp_name}.js')
     if not os.path.exists(js_path):
         js_path = None
 
-    css_path = os.path.join(component_dirpath, f'{dir_name}.css')
+    css_path = os.path.join(root_path, f'{comp_name}.css')
     if not os.path.exists(css_path):
         css_path = None
 
     component: Component = Component(
-        ComponentName=dir_name,
-        ComponentDirpath=component_dirpath,
-        HtmlPath=os.path.join(component_dirpath, f"{dir_name}.html"),
+        ComponentName=comp_name,
+        ComponentDirpath=root_path,
+        HtmlPath=os.path.join(root_path, f"{comp_name}.html"),
         ManifesrPath=manifest_path,
         HtmlTag=tag,
         ManifestData=manifest_data,

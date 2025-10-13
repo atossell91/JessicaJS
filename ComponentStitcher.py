@@ -41,11 +41,13 @@ def load_component_html(component_dict: dict[str, Component]):
     return components
 
 def find_components(directory) -> dict[str, Component]:
+    print(f'Looking for components in {directory}')
     items = os.listdir(directory)
     comps: dict[str, Component] = {}
     for item in items:
-        if os.path.isdir(item) and is_component(item):
-            comp = load_component(item)
+        item_path = os.path.join(directory, item)
+        if os.path.isdir(item_path) and is_component(item_path):
+            comp = load_component(item_path)
             comps[comp.ComponentName] = comp
     return comps
 
@@ -66,8 +68,11 @@ def stich_component(component: Component) -> HtmlElement:
 
     for component_name in components:
         child_comp = components[component_name]
-        child_tree = stich_component(child_comp.ComponentDirpath)
+        child_tree = stich_component(child_comp)
         component_trees[child_comp.HtmlTag] = child_tree
     
+    print(component.ComponentName)
+    print(component)
     index_tree = parse_html(component.GetHtmlText())
+    print("DONE")
     return recursive_stitch(index_tree, component_trees)

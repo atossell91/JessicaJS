@@ -11,7 +11,7 @@ def AddProject(args):
     create_project(args.name)
 
 def StitchProject(args):
-    build_project("index.html", ".", "out")
+    build_project(".", "out")
 
 def init_parser():
     parser = ArgumentParser("JessicaJS")

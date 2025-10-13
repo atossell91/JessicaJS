@@ -1,7 +1,6 @@
-class @name {
+class App {
     constructor() {}
-
     Run() {}
 }
 
-export { @name }
+export { App }
