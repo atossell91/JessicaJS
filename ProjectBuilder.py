@@ -16,7 +16,7 @@ def build_project(components_dir, output_dir):
 
     js_src = os.path.join(components_dir, "init.js")
     js_tgt = os.path.join(output_dir, "init.js")
-    shutil.copy(js_src, js_tgt  )
+    shutil.copy(js_src, js_tgt)
     
     filepath = os.path.join(output_dir, "index.html")
     with open(filepath, "w") as file:

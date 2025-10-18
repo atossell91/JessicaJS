@@ -22,6 +22,6 @@ def create_project(name: str) -> None:
     })
 
     create_file("init", ".", TemplatePaths.init_file, "js", sub_data)
-    create_component("jmodal", ".")
+    create_component(name, ".")
 
     #create_file("app", ".", TemplatePaths.js_path, "js")

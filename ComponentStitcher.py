@@ -14,34 +14,31 @@ from JComponent import load_component
 def recursive_stitch(current_element: HtmlElement,
         components: dict[str, HtmlElement]):
 
+    ##  Unpack the component and set it to the new node
     if current_element.name in components:
         new_node = recursive_stitch(components[current_element.name], components)
+    ##  Set the new node to the existing node
     else:
+        ## Create a new HTML Element
         new_node: HtmlElement = HtmlElement(current_element.name)
         new_node.data = current_element.data
         new_node.attributes = current_element.attributes
 
     for child in current_element.children:
         temp_node = recursive_stitch(child, components)
+        
+        ##  If the node is root, only append it's children
         if temp_node.name == 'root':
             for temp_child in temp_node.children:
                 new_node.children.append(temp_child)
+
+        ##  Otherwise append it, as-is
         else:
             new_node.children.append(recursive_stitch(child, components))
 
     return new_node
 
-def load_component_html(component_dict: dict[str, Component]):
-    components: dict[str, HtmlElement] = {}
-    for key in component_dict:
-        comp = component_dict[key]
-        if comp.ComponentName not in components:
-            loaded_html: str = comp.GetHtmlText()
-            components[comp.HtmlTag] = parse_html(loaded_html)
-    return components
-
 def find_components(directory) -> dict[str, Component]:
-    print(f'Looking for components in {directory}')
     items = os.listdir(directory)
     comps: dict[str, Component] = {}
     for item in items:
@@ -51,17 +48,6 @@ def find_components(directory) -> dict[str, Component]:
             comps[comp.ComponentName] = comp
     return comps
 
-def stitch_project(index_filepath, components_dir):
-    comps = find_components(components_dir)
-    unloaded_components: dict[str, HtmlElement] = load_component_html(comps)
-
-    html = FileHelpers.load_file(index_filepath)
-    tree: HtmlElement = parse_html(html)
-
-    #rar = stitch_components(tree, unloaded_components, loaded_components)
-    rar = recursive_stitch(tree, unloaded_components)
-    return rar
-
 def stich_component(component: Component) -> HtmlElement:
     components = find_components(component.ComponentDirpath)
     component_trees: dict[str, HtmlElement] = {}
@@ -70,9 +56,6 @@ def stich_component(component: Component) -> HtmlElement:
         child_comp = components[component_name]
         child_tree = stich_component(child_comp)
         component_trees[child_comp.HtmlTag] = child_tree
-    
-    print(component.ComponentName)
-    print(component)
+        
     index_tree = parse_html(component.GetHtmlText())
-    print("DONE")
     return recursive_stitch(index_tree, component_trees)
