@@ -16,7 +16,8 @@ def recursive_stitch(current_element: HtmlElement,
 
     ##  Unpack the component and set it to the new node
     if current_element.name in components:
-        new_node = recursive_stitch(components[current_element.name], components)
+        comp = components[current_element.name]
+        new_node = recursive_stitch(comp, components)
     ##  Set the new node to the existing node
     else:
         ## Create a new HTML Element
@@ -29,12 +30,11 @@ def recursive_stitch(current_element: HtmlElement,
         
         ##  If the node is root, only append it's children
         if temp_node.name == 'root':
-            for temp_child in temp_node.children:
-                new_node.children.append(temp_child)
-
+            new_node.children.extend(temp_node.children)
         ##  Otherwise append it, as-is
         else:
-            new_node.children.append(recursive_stitch(child, components))
+            #new_node.children.append(recursive_stitch(child, components))
+            new_node.children.append(temp_node)
 
     return new_node
 
@@ -52,10 +52,25 @@ def stich_component(component: Component) -> HtmlElement:
     components = find_components(component.ComponentDirpath)
     component_trees: dict[str, HtmlElement] = {}
 
+    temp_dict = {}
+
+    # Stitch all of the sub-components
     for component_name in components:
         child_comp = components[component_name]
-        child_tree = stich_component(child_comp)
+        child_tree, sub_components = stich_component(child_comp)
+
+        ## Add the components to a temporary dictionary
+        for sub_comp in sub_components:
+            temp_dict[sub_comp] = sub_components[sub_comp]
+
         component_trees[child_comp.HtmlTag] = child_tree
+    
+    ## Merge the temporary dictionary with the current one
+    for key in temp_dict:   
+        components[key] = temp_dict[key]
         
+    # Parse and stitch the current component
     index_tree = parse_html(component.GetHtmlText())
-    return recursive_stitch(index_tree, component_trees)
+    final_tree = recursive_stitch(index_tree, component_trees)
+
+    return final_tree, components
